@@ -8,7 +8,7 @@ if __name__ == "__main__":
     devices_model = Cep2Model()
     devices_model.add([Cep2ZigbeeDevice("bedRoom", "pir"),
                        Cep2ZigbeeDevice("livingRoom", "pir"),
-                       Cep2ZigbeeDevice("", "power plug")])
+                       Cep2ZigbeeDevice("vibratingBoi", "vibration sensor")])
 
     # Create a controller and give it the data model that was instantiated.
     controller = Cep2Controller(devices_model)

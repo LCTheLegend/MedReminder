@@ -10,7 +10,7 @@ class Cep2Controller:
     HTTP_HOST = "http://localhost:8000"
     MQTT_BROKER_HOST = "localhost"
     MQTT_BROKER_PORT = 1883
-    activationTime = datetime(2024, 4, 11, 11, 31)
+    activationTime = datetime(2024, 4, 18, 10, 33)
     currentRoom = "Stue"
 
     """ The controller is responsible for managing events received from zigbee2mqtt and handle them.
@@ -34,8 +34,8 @@ class Cep2Controller:
     def timeLoop(self):
         while(True):
             nowTime = datetime.now()
-            if(nowTime > self.activationTime and self.currentRoom == "livingRoom"): 
-                self.__z2m_client.change_state("glowyBoi", "ON")
+            if(nowTime > self.activationTime and self.currentRoom == "bedRoom"): 
+                self.__z2m_client.change_state("glowyBoi", "ON", 0.15, 0.75)
             # Only proceed if we're not already in the middle of a blinking sequence
             time.sleep(1) # Delay 1 second
 
@@ -83,6 +83,15 @@ class Cep2Controller:
         # If the device ID is known, then process the device event and send a message to the remote
         # web server.
         device = self.__devices_model.find(device_id)
+
+        if(device_id == "vibratingBoi"):
+            vibration = message.event["vibration"]
+            nowTime = datetime.now()
+            if vibration and nowTime > self.activationTime:
+                self.__z2m_client.change_state("glowyBoi", "OFF", 0, 0)
+            if vibration and nowTime < self.activationTime:
+                self.__z2m_client.change_state("glowyBoi", "ON", 0.7, 0.28)
+                
 
         if device:
             try:

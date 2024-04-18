@@ -168,13 +168,17 @@ class Cep2Zigbee2mqttClient:
         # Start the subscriber thread.
         self.__subscriber_thread.start()
 
-    def change_state(self, device_id: str, state: str) -> None:
+    def change_state(self, device_id: str, state: str, color_x : float, color_y : float)  -> None:
         if not self.__connected:
             raise RuntimeError("The client is not connected. Connect first.")
 
-        print("This is run")
-        self.__client.publish(topic=f"zigbee2mqtt/{device_id}/set",
-                              payload=json.dumps({"state": f"{state}"}))
+        self.__client.publish(
+            topic=f"zigbee2mqtt/{device_id}/set",
+            payload=json.dumps({
+                "color": {"x": color_x, "y": color_y},
+                "state": state
+            })
+        )
         
 
 
