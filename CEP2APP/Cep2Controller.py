@@ -110,5 +110,3 @@ class Cep2Controller:
                 except ConnectionError as ex:
                     print(f"{ex}")
                 """
-
-#https://github.com/LCTheLegend/MedReminder.git
