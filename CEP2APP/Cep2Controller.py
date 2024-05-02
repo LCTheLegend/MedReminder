@@ -7,11 +7,12 @@ from datetime import datetime
 from threading import Thread
 
 class Cep2Controller:
-    HTTP_HOST = "http://localhost:8000"
+    HTTP_HOST = "172.20.10.6"
     MQTT_BROKER_HOST = "localhost"
     MQTT_BROKER_PORT = 1883
-    activationTime = datetime(2024, 5, 2, 9, 40)
+    activationTime = datetime(2024, 5, 2, 11, 5)
     currentRoom = "Stue"
+    runningThread = True
 
     """ The controller is responsible for managing events received from zigbee2mqtt and handle them.
     By handle them it can be process, store and communicate with other parts of the system. In this
@@ -32,12 +33,13 @@ class Cep2Controller:
                                                   on_message_clbk=self.__zigbee2mqtt_event_received)
 
     def timeLoop(self):
-        while(True):
+        while(self.runningThread):
             nowTime = datetime.now()
             if(nowTime > self.activationTime and self.currentRoom == "bedRoom"): 
                 self.__z2m_client.change_state("glowyBoi", "ON", 0.15, 0.75)
+                self.runningThread = False
             # Only proceed if we're not already in the middle of a blinking sequence
-            time.sleep(1) # Delay 1 second
+            time.sleep(10) # Delay 1 second
 
     def start(self) -> None:
         """ Start listening for zigbee2mqtt events.
@@ -47,6 +49,13 @@ class Cep2Controller:
         timeThread.start()
         print("Thread started")
         print(f"Zigbee2Mqtt is {self.__z2m_client.check_health()}")
+
+    def blink(self, light_sensor_id) -> None:
+        while(True):
+            self.__z2m_client.change_state(light_sensor_id, "ON", 0.7, 0.28)
+            time.sleep(1)
+            self.__z2m_client.change_state(light_sensor_id, "OFF", 0.7, 0.28)
+            time.sleep(1)
 
     def stop(self) -> None:
         """ Stop listening for zigbee2mqtt events.
@@ -90,7 +99,7 @@ class Cep2Controller:
             if vibration and nowTime > self.activationTime:
                 self.__z2m_client.change_state("glowyBoi", "OFF", 0, 0)
             if vibration and nowTime < self.activationTime:
-                self.__z2m_client.change_state("glowyBoi", "ON", 0.7, 0.28)
+                self.blink("glowyBoi")
                 
 
         if device:
@@ -103,10 +112,7 @@ class Cep2Controller:
                 # (occupancy is true, i.e. a person is present in the room) or OFF.
                 self.currentRoom = device_id if occupancy else self.currentRoom
                 print(f"Current room is {self.currentRoom}")
-                """
-                # Change the state on all actuators, i.e. LEDs and power plugs.
-                for a in self.__devices_model.actuators_list:
-                    self.__z2m_client.change_state(a.id_, "ON")
+                
 
                 # Register event in the remote web server.
                 web_event = Cep2WebDeviceEvent(device_id=device.id_,
@@ -118,4 +124,4 @@ class Cep2Controller:
                     client.send_event(web_event.to_json())
                 except ConnectionError as ex:
                     print(f"{ex}")
-                """
+                
