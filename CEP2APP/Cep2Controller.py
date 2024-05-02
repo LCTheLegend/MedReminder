@@ -10,7 +10,7 @@ class Cep2Controller:
     HTTP_HOST = "http://localhost:8000"
     MQTT_BROKER_HOST = "localhost"
     MQTT_BROKER_PORT = 1883
-    activationTime = datetime(2024, 4, 18, 10, 33)
+    activationTime = datetime(2024, 5, 2, 9, 40)
     currentRoom = "Stue"
 
     """ The controller is responsible for managing events received from zigbee2mqtt and handle them.
