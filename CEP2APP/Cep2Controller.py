@@ -1,3 +1,4 @@
+from arrow import now
 from Cep2Model import Cep2Model
 from Cep2WebClient import Cep2WebClient, Cep2WebDeviceEvent
 from Cep2Zigbee2mqttClient import (Cep2Zigbee2mqttClient,
@@ -10,9 +11,14 @@ class Cep2Controller:
     HTTP_HOST = "172.20.10.6"
     MQTT_BROKER_HOST = "localhost"
     MQTT_BROKER_PORT = 1883
-    activationTime = datetime(2024, 5, 2, 11, 5)
+    medicationTime = datetime(2024, 5, 16, 9, 5)
+    timeWindowBefore = datetime(0,0,0,0,15)
+    timeWindowAfter = datetime(0,0,0,0,15)
+    dailyUpdateTime = datetime(2024, 5, 16, 23, 59)
     currentRoom = "Stue"
     runningThread = True
+    medicationTaken = False
+
 
     """ The controller is responsible for managing events received from zigbee2mqtt and handle them.
     By handle them it can be process, store and communicate with other parts of the system. In this
@@ -35,10 +41,19 @@ class Cep2Controller:
     def timeLoop(self):
         while(self.runningThread):
             nowTime = datetime.now()
-            if(nowTime > self.activationTime and self.currentRoom == "bedRoom"): 
+            if(nowTime > self.dailyUpdateTime):
+                self.medicationTaken = False
+                self.dailyUpdateTime = self.dailyUpdateTime + datetime(0,0,1)
+            if(nowTime > self.medicationTime + self.timeWindowAfter):
+                self.__z2m_client.change_state("glowyBoi", "OFF", 0, 0)
+                self.medicationTime = self.medicationTime + datetime(0,0,1)
+
+            elif(nowTime > self.medicationTime and self.currentRoom == "bedRoom"): 
                 self.__z2m_client.change_state("glowyBoi", "ON", 0.15, 0.75)
-                self.runningThread = False
-            # Only proceed if we're not already in the middle of a blinking sequence
+
+            elif(nowTime > self.medicationTime - self.timeWindowBefore):
+                self.__z2m_client.change_state("glowyBoi", "ON", 0.15, 0.75)
+
             time.sleep(10) # Delay 1 second
 
     def start(self) -> None:
@@ -96,9 +111,11 @@ class Cep2Controller:
         if(device_id == "vibratingBoi"):
             vibration = message.event["vibration"]
             nowTime = datetime.now()
-            if vibration and nowTime > self.activationTime:
+            if vibration and nowTime > self.medicationTime - self.timeWindowBefore:
                 self.__z2m_client.change_state("glowyBoi", "OFF", 0, 0)
-            if vibration and nowTime < self.activationTime:
+                self.medicationTime = self.medicationTime + datetime(0,0,1)
+                self.medicationTaken = True
+            elif vibration and (nowTime < (self.medicationTime - self.timeWindowBefore) or self.medicationTaken == True):
                 self.blink("glowyBoi")
                 
 
