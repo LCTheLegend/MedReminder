@@ -1,7 +1,9 @@
 import json
 from dataclasses import dataclass
 from typing import Any
+from Cep2Heucod import HeucodEvent
 import requests
+from datetime import datetime
 
 
 @dataclass
@@ -11,18 +13,20 @@ class Cep2WebDeviceEvent:
     device_id: str
     device_type: str
     measurement: Any
+    heucod_event: int
 
-    def to_json(self) -> str:
-        """ Serializes the object to a JSON string.
+    def to_heucod(self) -> str:
 
-        Returns:
-            str: the event in JSON format
-        """
-        # The dumps() function serializes an object to a JSON string. In this case, it serializes a
-        # dictionary.
-        return json.dumps({"deviceId": self.device_id,
-                           "deviceType": self.device_type,
-                           "measurement": self.measurement})
+        event_heucod = HeucodEvent()
+        event_heucod.id = self.device_id
+        event_heucod.event_type = str(self.heucod_event)
+        event_heucod.event_type_enum = self.heucod_event
+        event_heucod.description = self.measurement
+        event_heucod.timestamp = datetime.now().isoformat()
+        event_heucod.device_model = self.device_type
+
+
+        return event_heucod.to_json()
 
 
 class Cep2WebClient:
@@ -56,3 +60,26 @@ class Cep2WebClient:
             return response.status_code
         except requests.exceptions.ConnectionError:
             raise ConnectionError(f"Error connecting to {self.__host}")
+    
+    def retrieve_variables(self) -> tuple:
+        """ Retrieves three variables from the PHP server.
+
+        Returns:
+            tuple: a tuple containing three variables retrieved from the server
+        """
+        try:
+            # Send a GET request to retrieve the variables from the server
+            response = requests.get(self.__host)
+
+            # Parse the response and extract the variables
+            data = response.json()
+            var1 = data.get('variable1')
+            var2 = data.get('variable2')
+            var3 = data.get('variable3')
+
+            return var1, var2, var3
+        except requests.exceptions.ConnectionError:
+            raise ConnectionError(f"Error connecting to {self.__host}")
+        except Exception as e:
+            # Handle any other exceptions gracefully
+            raise RuntimeError(f"Error retrieving variables: {e}")
