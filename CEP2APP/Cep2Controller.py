@@ -13,9 +13,9 @@ class Cep2Controller:
     HTTP_HOST = "172.20.10.6"
     MQTT_BROKER_HOST = "localhost"
     MQTT_BROKER_PORT = 1883
-    medicationTime = datetime(2024, 5, 16, 9, 5)
-    timeWindowBefore = 15
-    timeWindowAfter = 15
+    medicationTime = datetime(2024, 5, 16, 8, 44)
+    timeWindowBefore = 1
+    timeWindowAfter = 1
     dailyUpdateTime = datetime(2024, 5, 16, 23, 59)
     currentRoom = "Stue"
     runningThread = True
