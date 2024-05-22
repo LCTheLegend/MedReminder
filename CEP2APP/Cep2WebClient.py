@@ -12,6 +12,7 @@ class Cep2WebDeviceEvent:
     measurement: Any
     heucod_event: int
 
+    # function for converting to Heucod format using the HeucodEvent class
     def to_heucod(self) -> str:
         event_heucod = HeucodEvent()
         event_heucod.id = self.device_id
@@ -35,6 +36,7 @@ class Cep2WebClient:
         except requests.exceptions.ConnectionError:
             raise ConnectionError(f"Error connecting to {self.__host}")
     
+    #this function retrieves the potentially new medication time from the server
     def retrieve_variables(self) -> tuple:
         try:
             response = requests.get(self.__host)
